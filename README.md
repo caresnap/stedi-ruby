@@ -7,7 +7,7 @@ Ruby client for the [Stedi Healthcare API](https://www.stedi.com/docs/api-refere
 Add to your Gemfile:
 
 ```ruby
-gem "stedi", path: "path/to/stedi-api"
+gem "stedi", github: "caresnap/stedi-ruby"
 ```
 
 Then run:
@@ -119,7 +119,3 @@ Run tests:
 bundle install
 bundle exec rake test
 ```
-
-## License
-
-MIT
