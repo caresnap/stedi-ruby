@@ -7,9 +7,17 @@ require "uri"
 
 module Stedi
   class Client
-    def initialize(api_key: nil, base_url: nil)
+    def initialize(api_key: nil, api_url: nil)
       @api_key = api_key || Stedi.api_key
-      @base_url = base_url || Stedi.base_url
+      @api_url = api_url
+    end
+
+    def get(path, params = {})
+      response = connection.get(build_path(path)) do |req|
+        req.params = camelize_keys(params)
+      end
+
+      handle_response(response)
     end
 
     def post(path, body)
@@ -23,7 +31,7 @@ module Stedi
     private
 
     def connection
-      @connection ||= Faraday.new(url: @base_url) do |f|
+      @connection ||= Faraday.new(url: @api_url) do |f|
         f.request :retry, {
           max: 3,
           interval: 0.5,
@@ -92,8 +100,8 @@ module Stedi
     end
 
     def build_path(path)
-      # Extract path from base_url and join with request path
-      base_uri = URI.parse(@base_url)
+      # Extract path from api_url and join with request path
+      base_uri = URI.parse(@api_url)
       base_path = base_uri.path.chomp("/")
       request_path = path.start_with?("/") ? path : "/#{path}"
       "#{base_path}#{request_path}"
@@ -101,13 +109,20 @@ module Stedi
 
     module Substitute
       class Client
+        attr_reader :gets
         attr_reader :posts
         attr_accessor :response_body, :response_status
 
         def initialize
+          @gets = []
           @posts = []
           @response_body = {}
           @response_status = 200
+        end
+
+        def get(path, params = {})
+          @gets << { path: path, params: params }
+          handle_response
         end
 
         def post(path, body)
@@ -115,11 +130,22 @@ module Stedi
           handle_response
         end
 
+        def got?(path: nil, params: nil)
+          @gets.any? do |get|
+            (path.nil? || get[:path] == path) &&
+              (params.nil? || get[:params] == params)
+          end
+        end
+
         def posted?(path: nil, body: nil)
           @posts.any? do |post|
             (path.nil? || post[:path] == path) &&
               (body.nil? || post[:body] == body)
           end
+        end
+
+        def last_get
+          @gets.last
         end
 
         def last_post

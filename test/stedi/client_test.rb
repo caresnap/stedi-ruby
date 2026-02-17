@@ -66,9 +66,8 @@ class Stedi::ClientTest < Minitest::Test
     assert_equal expected, result
   end
 
-  def test_build_path_joins_base_url_path_with_request_path
-    Stedi.base_url = "https://api.example.com/v1"
-    client = Stedi::Client.new
+  def test_build_path_joins_api_url_path_with_request_path
+    client = Stedi::Client.new(api_url: "https://api.example.com/v1")
 
     result = client.send(:build_path, "/users")
 
@@ -76,17 +75,15 @@ class Stedi::ClientTest < Minitest::Test
   end
 
   def test_build_path_handles_path_without_leading_slash
-    Stedi.base_url = "https://api.example.com/v1"
-    client = Stedi::Client.new
+    client = Stedi::Client.new(api_url: "https://api.example.com/v1")
 
     result = client.send(:build_path, "users")
 
     assert_equal "/v1/users", result
   end
 
-  def test_build_path_handles_base_url_with_trailing_slash
-    Stedi.base_url = "https://api.example.com/v1/"
-    client = Stedi::Client.new
+  def test_build_path_handles_api_url_with_trailing_slash
+    client = Stedi::Client.new(api_url: "https://api.example.com/v1/")
 
     result = client.send(:build_path, "/users")
 
@@ -95,6 +92,16 @@ class Stedi::ClientTest < Minitest::Test
 end
 
 class Stedi::Client::SubstituteTest < Minitest::Test
+  def test_substitute_records_gets
+    client = Stedi::Client::Substitute.build
+
+    client.get("/test", { first_name: "Jane" })
+
+    assert client.got?
+    assert_equal "/test", client.last_get[:path]
+    assert_equal({ first_name: "Jane" }, client.last_get[:params])
+  end
+
   def test_substitute_records_posts
     client = Stedi::Client::Substitute.build
 
@@ -109,7 +116,7 @@ class Stedi::Client::SubstituteTest < Minitest::Test
     client = Stedi::Client::Substitute.build
     client.response_body = { "result" => "success" }
 
-    result = client.post("/test", {})
+    result = client.get("/test", {})
 
     assert_instance_of Stedi::Response, result
     assert_equal "success", result.result
@@ -173,11 +180,29 @@ class Stedi::Client::SubstituteTest < Minitest::Test
     client.response_body = { "message" => "Internal server error" }
 
     error = assert_raises(Stedi::ApiError) do
-      client.post("/test", {})
+      client.get("/test", {})
     end
 
     assert_equal "Internal server error", error.message
     assert_equal 500, error.status
+  end
+
+  def test_got_with_path_filter
+    client = Stedi::Client::Substitute.build
+    client.get("/users", {})
+    client.get("/orders", {})
+
+    assert client.got?(path: "/users")
+    assert client.got?(path: "/orders")
+    refute client.got?(path: "/products")
+  end
+
+  def test_got_with_params_filter
+    client = Stedi::Client::Substitute.build
+    client.get("/test", { name: "Jane" })
+
+    assert client.got?(params: { name: "Jane" })
+    refute client.got?(params: { name: "John" })
   end
 
   def test_posted_with_path_filter

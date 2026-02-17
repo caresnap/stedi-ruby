@@ -6,7 +6,7 @@ module Stedi
       ENDPOINT = "/change/medicalnetwork/eligibility/v3"
 
       def initialize(client: nil)
-        @client = client || Stedi::Client.new
+        @client = client || Stedi::Client.new(api_url: API_URL)
       end
 
       def check(params)

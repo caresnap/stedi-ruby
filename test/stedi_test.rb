@@ -17,18 +17,6 @@ class StediTest < Minitest::Test
     assert_equal "test_key", Stedi.api_key
   end
 
-  def test_base_url_has_default_value
-    Stedi.reset!
-
-    assert_equal "https://healthcare.us.stedi.com/2024-04-01", Stedi.base_url
-  end
-
-  def test_base_url_can_be_overridden
-    Stedi.base_url = "https://custom.api.com"
-
-    assert_equal "https://custom.api.com", Stedi.base_url
-  end
-
   def test_healthcare_returns_healthcare_client
     assert_instance_of Stedi::Healthcare::Client, Stedi.healthcare
   end
@@ -40,18 +28,35 @@ class StediTest < Minitest::Test
     assert_same client1, client2
   end
 
+  def test_core_returns_core_client
+    assert_instance_of Stedi::Core::Client, Stedi.core
+  end
+
+  def test_core_memoizes_client
+    client1 = Stedi.core
+    client2 = Stedi.core
+
+    assert_same client1, client2
+  end
+
   def test_reset_clears_all_configuration
     Stedi.api_key = "test_key"
-    Stedi.base_url = "https://custom.api.com"
-    Stedi.healthcare
+    healthcare = Stedi.healthcare
+    core = Stedi.core
 
     Stedi.reset!
 
     assert_nil Stedi.api_key
-    assert_equal "https://healthcare.us.stedi.com/2024-04-01", Stedi.base_url
+    refute_same healthcare, Stedi.healthcare
+    refute_same core, Stedi.core
+  end
+
+  def test_service_api_urls_are_constants
+    assert_equal "https://healthcare.us.stedi.com/2024-04-01", Stedi::Healthcare::API_URL
+    assert_equal "https://core.us.stedi.com/2023-08-01", Stedi::Core::API_URL
   end
 
   def test_version_is_defined
-    assert_equal "0.1.0", Stedi::VERSION
+    assert_equal "0.2.0", Stedi::VERSION
   end
 end
