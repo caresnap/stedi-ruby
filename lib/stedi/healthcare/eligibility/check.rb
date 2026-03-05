@@ -25,18 +25,34 @@ module Stedi
           instance
         end
 
-        def self.call(params, session: nil)
+        def self.call(params, headers: nil, x_forwarded_for: nil, session: nil)
           instance = build(session:)
-          instance.(params)
+          instance.(params, headers:, x_forwarded_for:)
         end
 
         def configure(session: nil)
           Stedi::Healthcare::Session.configure(self, session:, attr_name: :session)
         end
 
-        def call(params)
+        def call(params, headers: nil, x_forwarded_for: nil)
           logger.trace { "Checking eligibility." }
-          session.(:post, ENDPOINT, body: params)
+          session.(:post, ENDPOINT, body: params, headers: build_headers(headers, x_forwarded_for))
+        end
+
+        private
+
+        def build_headers(headers, x_forwarded_for)
+          request_headers = headers ? headers.dup : {}
+          forwarded_for = normalize_x_forwarded_for(x_forwarded_for)
+          request_headers["X-Forwarded-For"] = forwarded_for if forwarded_for
+          request_headers.empty? ? nil : request_headers
+        end
+
+        def normalize_x_forwarded_for(x_forwarded_for)
+          return nil if x_forwarded_for.nil?
+          return x_forwarded_for.join(", ") if x_forwarded_for.is_a?(Array)
+
+          x_forwarded_for.to_s
         end
 
         module Substitute
@@ -50,8 +66,12 @@ module Stedi
               @response = Response.new({})
             end
 
-            def call(params)
-              @calls << { params: params }
+            def call(params, headers: nil, x_forwarded_for: nil)
+              @calls << {
+                params: params,
+                headers: headers,
+                x_forwarded_for: x_forwarded_for
+              }
               raise error if error
               response
             end

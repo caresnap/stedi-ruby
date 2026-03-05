@@ -28,9 +28,9 @@ module Stedi
         instance
       end
 
-      def self.call(method, path, params: nil, body: nil, api_key: nil, api_url: nil, connection: nil)
+      def self.call(method, path, params: nil, body: nil, headers: nil, api_key: nil, api_url: nil, connection: nil)
         instance = build(api_key:, api_url:, connection:)
-        instance.(method, path, params:, body:)
+        instance.(method, path, params:, body:, headers:)
       end
 
       def initialize(api_key: nil, api_url: nil)
@@ -38,11 +38,12 @@ module Stedi
         @api_url = api_url
       end
 
-      def call(method, path, params: nil, body: nil)
+      def call(method, path, params: nil, body: nil, headers: nil)
         logger.trace { "Executing HTTP request. (Method: #{method}, Path: #{path})" }
 
         response = connection.public_send(method.to_sym, build_path(path)) do |request|
           request.params = camelize_keys(params) if params
+          request.headers.update(normalize_headers(headers)) if headers
           request.body = JSON.generate(camelize_keys(body)) unless body.nil?
         end
 
@@ -125,6 +126,19 @@ module Stedi
         end.join
       end
 
+      def normalize_headers(headers)
+        headers.each_with_object({}) do |(key, value), result|
+          result[normalize_header_name(key)] = value
+        end
+      end
+
+      def normalize_header_name(key)
+        header_name = key.to_s
+        return header_name if header_name.match?(/[A-Z]/) || header_name.include?("-")
+
+        header_name.split("_").map(&:capitalize).join("-")
+      end
+
       def build_path(path)
         base_uri = URI.parse(api_url)
         base_path = base_uri.path.chomp("/")
@@ -143,12 +157,13 @@ module Stedi
             @response = Response.new({})
           end
 
-          def call(method, path, params: nil, body: nil)
+          def call(method, path, params: nil, body: nil, headers: nil)
             @calls << {
               method: method,
               path: path,
               params: params,
-              body: body
+              body: body,
+              headers: headers
             }
 
             raise error if error

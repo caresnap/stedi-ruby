@@ -53,6 +53,15 @@ response = Stedi::Healthcare::Eligibility::Check.call(
 )
 ```
 
+For CMS requests that require traceability headers, pass `x_forwarded_for:` or `headers:`:
+
+```ruby
+response = Stedi::Healthcare::Eligibility::Check.call(
+  params,
+  x_forwarded_for: ["203.0.113.10", "198.51.100.7"]
+)
+```
+
 ### Poll Transactions
 
 ```ruby

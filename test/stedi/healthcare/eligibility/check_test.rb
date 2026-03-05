@@ -30,6 +30,15 @@ class Stedi::Healthcare::Eligibility::CheckTest < Minitest::Test
     assert_equal params, @session.calls.last[:body]
   end
 
+  def test_call_adds_x_forwarded_for_header
+    @check.(params, x_forwarded_for: ["203.0.113.10", "198.51.100.7"])
+
+    assert_equal(
+      { "X-Forwarded-For" => "203.0.113.10, 198.51.100.7" },
+      @session.calls.last[:headers]
+    )
+  end
+
   def test_class_configure_assigns_instance
     receiver = Receiver.new
 
@@ -47,8 +56,9 @@ class Stedi::Healthcare::Eligibility::CheckTest < Minitest::Test
   def test_substitute_records_calls
     substitute = Stedi::Healthcare::Eligibility::Check::Substitute.build
 
-    substitute.(params)
+    substitute.(params, headers: { "X-Forwarded-For" => "203.0.113.10" })
 
     assert_equal params, substitute.calls.last[:params]
+    assert_equal({ "X-Forwarded-For" => "203.0.113.10" }, substitute.calls.last[:headers])
   end
 end

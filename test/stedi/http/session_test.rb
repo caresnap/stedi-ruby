@@ -3,7 +3,7 @@
 require "test_helper"
 
 class Stedi::HTTP::SessionTest < Minitest::Test
-  Request = Struct.new(:params, :body)
+  Request = Struct.new(:params, :body, :headers)
   RawResponse = Struct.new(:status, :body)
 
   class ConnectionSubstitute
@@ -16,16 +16,16 @@ class Stedi::HTTP::SessionTest < Minitest::Test
     end
 
     def get(path)
-      request = Request.new
+      request = Request.new(nil, nil, {})
       yield request if block_given?
-      @requests << { method: :get, path: path, params: request.params, body: request.body }
+      @requests << { method: :get, path: path, params: request.params, body: request.body, headers: request.headers }
       next_response
     end
 
     def post(path)
-      request = Request.new
+      request = Request.new(nil, nil, {})
       yield request if block_given?
-      @requests << { method: :post, path: path, params: request.params, body: request.body }
+      @requests << { method: :post, path: path, params: request.params, body: request.body, headers: request.headers }
       next_response
     end
   end
@@ -63,6 +63,30 @@ class Stedi::HTTP::SessionTest < Minitest::Test
 
     assert_equal "123", response.control_number
     assert_equal({ "subscriber" => { "firstName" => "Jane" } }.to_json, connection.requests.last[:body])
+  end
+
+  def test_call_applies_request_headers
+    connection = ConnectionSubstitute.new
+    connection.next_response = RawResponse.new(200, '{"ok":true}')
+
+    session = Stedi::HTTP::Session.build(
+      api_key: "token",
+      api_url: "https://api.example.com/v1",
+      connection: connection
+    )
+
+    response = session.(
+      :get,
+      "/polling/transactions",
+      headers: {
+        x_forwarded_for: "203.0.113.10, 198.51.100.7",
+        "Accept-Encoding" => "gzip"
+      }
+    )
+
+    assert_equal true, response.ok
+    assert_equal "203.0.113.10, 198.51.100.7", connection.requests.last[:headers]["X-Forwarded-For"]
+    assert_equal "gzip", connection.requests.last[:headers]["Accept-Encoding"]
   end
 
   def test_call_raises_authentication_error_for_401
@@ -145,11 +169,12 @@ class Stedi::HTTP::SessionTest < Minitest::Test
     substitute = Stedi::HTTP::Session::Substitute.build
     substitute.response = Stedi::Response.new({ "ok" => true })
 
-    response = substitute.(:get, "/x", params: { a: 1 })
+    response = substitute.(:get, "/x", params: { a: 1 }, headers: { "X-Test" => "1" })
 
     assert_equal true, response.ok
     assert_equal :get, substitute.calls.last[:method]
     assert_equal "/x", substitute.calls.last[:path]
     assert_equal({ a: 1 }, substitute.calls.last[:params])
+    assert_equal({ "X-Test" => "1" }, substitute.calls.last[:headers])
   end
 end

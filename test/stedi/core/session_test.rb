@@ -18,11 +18,17 @@ class Stedi::Core::SessionTest < Minitest::Test
     http_session.response = Stedi::Response.new({ "ok" => true })
 
     session = Stedi::Core::Session.build(http_session: http_session)
-    response = session.(:get, "/polling/transactions", params: { start_date_time: "2026-02-11T00:00:00Z" })
+    response = session.(
+      :get,
+      "/polling/transactions",
+      params: { start_date_time: "2026-02-11T00:00:00Z" },
+      headers: { "Accept-Encoding" => "gzip" }
+    )
 
     assert_equal true, response.ok
     assert_equal :get, http_session.calls.last[:method]
     assert_equal "/polling/transactions", http_session.calls.last[:path]
+    assert_equal({ "Accept-Encoding" => "gzip" }, http_session.calls.last[:headers])
   end
 
   def test_class_call_delegates_to_built_instance
