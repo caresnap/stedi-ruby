@@ -8,10 +8,10 @@ Gem::Specification.new do |s|
   s.authors = ["CareSnap"]
   s.email = ["dev@caresnap.com"]
 
-  s.summary = "Ruby client for Stedi Healthcare API"
-  s.description = "A Ruby gem for interacting with the Stedi Healthcare API, including 270/271 eligibility checks."
+  s.summary = "Ruby command-style client for Stedi Healthcare APIs"
+  s.description = "A Ruby gem with useful-object command classes for Stedi healthcare operations."
   s.homepage = "https://github.com/caresnap/stedi-ruby"
-  s.licenses = ['MIT']
+  s.licenses = ["MIT"]
   s.required_ruby_version = ">= 2.7.0"
 
   s.metadata["homepage_uri"] = s.homepage
@@ -25,6 +25,8 @@ Gem::Specification.new do |s|
   end
   s.require_paths = ["lib"]
 
+  s.add_dependency "evt-dependency"
+  s.add_dependency "evt-log"
   s.add_dependency "faraday", "~> 2.0"
   s.add_dependency "faraday-retry", "~> 2.0"
 end

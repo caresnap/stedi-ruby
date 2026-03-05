@@ -2,13 +2,46 @@ PATH
   remote: .
   specs:
     stedi-ruby (0.2.0)
+      evt-dependency
+      evt-log
       faraday (~> 2.0)
       faraday-retry (~> 2.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    faraday (2.14.0)
+    amazing_print (2.0.0)
+    date (3.5.1)
+    erb (6.0.1)
+    evt-attribute (2.0.0.0)
+    evt-clock (2.4.0.1)
+      evt-mimic
+      ostruct
+    evt-dependency (2.2.0.0)
+      evt-subst_attr
+    evt-initializer (2.0.0.0)
+      evt-attribute
+    evt-invocation (2.2.0.0)
+    evt-log (2.1.1.2)
+      evt-clock
+      evt-dependency
+      evt-initializer
+      evt-telemetry
+      terminal_colors
+    evt-mimic (2.6.0.0)
+      evt-record_invocation
+    evt-record_invocation (2.0.1.0)
+      evt-invocation
+    evt-reflect (2.2.0.1)
+    evt-subst_attr (2.3.0.0)
+      evt-attribute
+      evt-mimic
+      evt-reflect
+    evt-telemetry (2.4.0.3)
+      evt-clock
+      evt-dependency
+      ostruct
+    faraday (2.14.1)
       faraday-net_http (>= 2.0, < 3.5)
       json
       logger
@@ -16,12 +49,35 @@ GEM
       net-http (~> 0.5)
     faraday-retry (2.4.0)
       faraday (~> 2.0)
+    io-console (0.8.2)
+    irb (1.17.0)
+      pp (>= 0.6.0)
+      prism (>= 1.3.0)
+      rdoc (>= 4.0.0)
+      reline (>= 0.4.2)
     json (2.18.1)
     logger (1.7.0)
     minitest (5.27.0)
     net-http (0.9.1)
       uri (>= 0.11.1)
+    ostruct (0.6.3)
+    pp (0.6.3)
+      prettyprint
+    prettyprint (0.2.0)
+    prism (1.9.0)
+    psych (5.3.1)
+      date
+      stringio
     rake (13.3.1)
+    rdoc (7.2.0)
+      erb
+      psych (>= 4.0.0)
+      tsort
+    reline (0.6.3)
+      io-console (~> 0.5)
+    stringio (3.2.0)
+    terminal_colors (1.0.0)
+    tsort (0.2.0)
     uri (1.1.1)
 
 PLATFORMS
@@ -29,6 +85,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  amazing_print
+  irb
   minitest (~> 5.0)
   rake (~> 13.0)
   stedi-ruby!

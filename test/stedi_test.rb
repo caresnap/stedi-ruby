@@ -17,38 +17,12 @@ class StediTest < Minitest::Test
     assert_equal "test_key", Stedi.api_key
   end
 
-  def test_healthcare_returns_healthcare_client
-    assert_instance_of Stedi::Healthcare::Client, Stedi.healthcare
-  end
-
-  def test_healthcare_memoizes_client
-    client1 = Stedi.healthcare
-    client2 = Stedi.healthcare
-
-    assert_same client1, client2
-  end
-
-  def test_core_returns_core_client
-    assert_instance_of Stedi::Core::Client, Stedi.core
-  end
-
-  def test_core_memoizes_client
-    client1 = Stedi.core
-    client2 = Stedi.core
-
-    assert_same client1, client2
-  end
-
-  def test_reset_clears_all_configuration
+  def test_reset_clears_configuration
     Stedi.api_key = "test_key"
-    healthcare = Stedi.healthcare
-    core = Stedi.core
 
     Stedi.reset!
 
     assert_nil Stedi.api_key
-    refute_same healthcare, Stedi.healthcare
-    refute_same core, Stedi.core
   end
 
   def test_service_api_urls_are_constants
