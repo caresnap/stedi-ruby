@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+ENV["LOG_LEVEL"] = "trace"
+ENV["CONSOLE_DEVICE"] ||= "stderr"
+ENV["LOG_TAGS"] = "_all"
+
+require "bundler/setup"
+require_relative "../lib/stedi/cli/batch_eligibility/executable"
+
+exit(Stedi::CLI::BatchEligibility::Executable.call(ARGV))

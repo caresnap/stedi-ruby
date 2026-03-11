@@ -8,3 +8,4 @@ module Stedi
 end
 
 require_relative "eligibility/check"
+require_relative "eligibility/batch"

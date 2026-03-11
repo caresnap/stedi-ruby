@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency "evt-dependency"
   s.add_dependency "evt-log"
+  s.add_dependency "csv"
   s.add_dependency "faraday", "~> 2.0"
   s.add_dependency "faraday-retry", "~> 2.0"
 end

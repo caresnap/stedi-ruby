@@ -1,7 +1,8 @@
 PATH
   remote: .
   specs:
-    stedi-ruby (0.2.0)
+    stedi-ruby (0.3.0)
+      csv
       evt-dependency
       evt-log
       faraday (~> 2.0)
@@ -11,6 +12,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     amazing_print (2.0.0)
+    csv (3.3.5)
     date (3.5.1)
     erb (6.0.1)
     evt-attribute (2.0.0.0)

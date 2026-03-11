@@ -8,6 +8,7 @@ require_relative "stedi/errors"
 require_relative "stedi/response"
 require_relative "stedi/http/session"
 require_relative "stedi/core"
+require_relative "stedi/manager"
 require_relative "stedi/healthcare"
 
 module Stedi

@@ -31,6 +31,6 @@ class StediTest < Minitest::Test
   end
 
   def test_version_is_defined
-    assert_equal "0.2.0", Stedi::VERSION
+    assert_equal "0.3.0", Stedi::VERSION
   end
 end

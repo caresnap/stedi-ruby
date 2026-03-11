@@ -41,10 +41,13 @@ module Stedi
       def call(method, path, params: nil, body: nil, headers: nil)
         logger.trace { "Executing HTTP request. (Method: #{method}, Path: #{path})" }
 
+        request_snapshot = build_request_snapshot(method, path, params, body, headers)
+        logger.debug { "HTTP request details: #{request_snapshot.inspect}" }
+
         response = connection.public_send(method.to_sym, build_path(path)) do |request|
-          request.params = camelize_keys(params) if params
-          request.headers.update(normalize_headers(headers)) if headers
-          request.body = JSON.generate(camelize_keys(body)) unless body.nil?
+          request.params = request_snapshot[:params] if request_snapshot[:params]
+          request.headers.update(request_snapshot[:custom_headers]) if request_snapshot[:custom_headers]
+          request.body = request_snapshot[:body_json] unless request_snapshot[:body_json].nil?
         end
 
         logger.debug { "Executed HTTP request. (Method: #{method}, Path: #{path}, Status: #{response.status})" }
@@ -124,6 +127,34 @@ module Stedi
         str.split("_").each_with_index.map do |word, index|
           index.zero? ? word : word.capitalize
         end.join
+      end
+
+      def build_request_snapshot(method, path, params, body, headers)
+        request_params = params ? camelize_keys(params) : nil
+        request_body = body.nil? ? nil : camelize_keys(body)
+        custom_headers = headers ? normalize_headers(headers) : nil
+
+        {
+          method: method,
+          url: build_url(path),
+          headers: effective_headers(custom_headers),
+          custom_headers: custom_headers,
+          params: request_params,
+          body: request_body,
+          body_json: request_body.nil? ? nil : JSON.generate(request_body)
+        }
+      end
+
+      def effective_headers(custom_headers)
+        default_headers = connection.respond_to?(:headers) ? connection.headers.to_h : {}
+        default_headers.merge(custom_headers || {})
+      end
+
+      def build_url(path)
+        base_uri = URI.parse(api_url)
+        base_uri.path = build_path(path)
+        base_uri.query = nil
+        base_uri.to_s
       end
 
       def normalize_headers(headers)

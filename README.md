@@ -62,6 +62,48 @@ response = Stedi::Healthcare::Eligibility::Check.call(
 )
 ```
 
+### Batch Eligibility Checks
+
+```ruby
+batch = Stedi::Healthcare::Eligibility::Batch::Submit.call(
+  [
+    {
+      trading_partner_service_id: "AHS",
+      submitter_transaction_identifier: "ABC123456789",
+      provider: {
+        npi: "1234567891",
+        organization_name: "ACME Health Services"
+      },
+      subscriber: {
+        member_id: "1234567890",
+        first_name: "Jane",
+        last_name: "Doe",
+        date_of_birth: "19000101"
+      }
+    }
+  ],
+  name: "march-2026-eligibility-batch",
+  max_retry_hours: 12
+)
+
+status = Stedi::Healthcare::Eligibility::Batch::GetStatus.call(batch.batch_id)
+items = Stedi::Healthcare::Eligibility::Batch::GetItemStatuses.call(batch.batch_id, page_size: 100)
+results = Stedi::Healthcare::Eligibility::Batch::Poll.call(nil, batch_id: batch.batch_id, page_size: 25)
+```
+
+### Batch CLI
+
+Use the checked-in CLI with a CSV that matches [data/batch-eligibility-template.csv](/Users/james/src/caresnap/stedi-ruby/data/batch-eligibility-template.csv):
+
+```bash
+STEDI_API_KEY=... bin/batch-eligibility data/batch-eligibility.csv
+STEDI_API_KEY=... bin/batch-eligibility data/batch-eligibility.csv --status
+STEDI_API_KEY=... bin/batch-eligibility data/batch-eligibility.csv --item-statuses
+STEDI_API_KEY=... bin/batch-eligibility data/batch-eligibility.csv --poll
+```
+
+The submit command uses the CSV filename without its extension as the batch name and writes the returned batch ID to a sidecar file next to the CSV, such as `data/batch-eligibility.batch_id`. All request logs go to `stderr`, and the JSON payload is printed to `stdout`.
+
 ### Poll Transactions
 
 ```ruby
