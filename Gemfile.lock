@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    stedi-ruby (0.3.0)
+    stedi-ruby (0.4.0)
       csv
       evt-dependency
       evt-log
@@ -57,7 +57,7 @@ GEM
       prism (>= 1.3.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
-    json (2.18.1)
+    json (2.19.1)
     logger (1.7.0)
     minitest (5.27.0)
     net-http (0.9.1)
