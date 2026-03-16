@@ -30,6 +30,17 @@ class Stedi::Healthcare::SessionTest < Minitest::Test
     assert_equal({ "X-Forwarded-For" => "203.0.113.10" }, http_session.calls.last[:headers])
   end
 
+  def test_call_delegates_timeout_to_http_session
+    http_session = Stedi::HTTP::Session::Substitute.build
+    http_session.response = Stedi::Response.new({ "ok" => true })
+
+    session = Stedi::Healthcare::Session.build(http_session: http_session)
+    response = session.(:get, "/x", timeout: 120)
+
+    assert_equal true, response.ok
+    assert_equal 120, http_session.calls.last[:timeout]
+  end
+
   def test_class_call_delegates_to_built_instance
     http_session = Stedi::HTTP::Session::Substitute.build
     http_session.response = Stedi::Response.new({ "ok" => true })

@@ -10,6 +10,7 @@ module Stedi
         include Log::Dependency
 
         ENDPOINT = "/change/medicalnetwork/eligibility/v3"
+        DEFAULT_REQUEST_TIMEOUT = 120
 
         dependency :session, Stedi::Healthcare::Session
 
@@ -36,7 +37,13 @@ module Stedi
 
         def call(params, headers: nil, x_forwarded_for: nil)
           logger.trace { "Checking eligibility." }
-          session.(:post, ENDPOINT, body: params, headers: build_headers(headers, x_forwarded_for))
+          session.(
+            :post,
+            ENDPOINT,
+            body: params,
+            headers: build_headers(headers, x_forwarded_for),
+            timeout: DEFAULT_REQUEST_TIMEOUT
+          )
         end
 
         private

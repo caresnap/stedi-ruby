@@ -22,9 +22,9 @@ module Stedi
         instance
       end
 
-      def self.call(method, path, params: nil, body: nil, headers: nil, http_session: nil, api_key: nil)
+      def self.call(method, path, params: nil, body: nil, headers: nil, timeout: nil, http_session: nil, api_key: nil)
         instance = build(http_session:, api_key:)
-        instance.(method, path, params:, body:, headers:)
+        instance.(method, path, params:, body:, headers:, timeout:)
       end
 
       def configure(http_session: nil, api_key: nil)
@@ -40,9 +40,9 @@ module Stedi
         end
       end
 
-      def call(method, path, params: nil, body: nil, headers: nil)
+      def call(method, path, params: nil, body: nil, headers: nil, timeout: nil)
         logger.trace { "Calling healthcare session. (Method: #{method}, Path: #{path})" }
-        http_session.(method, path, params:, body:, headers:)
+        http_session.(method, path, params:, body:, headers:, timeout:)
       end
 
       module Substitute
@@ -56,13 +56,14 @@ module Stedi
             @response = Response.new({})
           end
 
-          def call(method, path, params: nil, body: nil, headers: nil)
+          def call(method, path, params: nil, body: nil, headers: nil, timeout: nil)
             @calls << {
               method: method,
               path: path,
               params: params,
               body: body,
-              headers: headers
+              headers: headers,
+              timeout: timeout
             }
 
             raise error if error

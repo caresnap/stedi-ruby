@@ -3,7 +3,8 @@
 require "test_helper"
 
 class Stedi::HTTP::SessionTest < Minitest::Test
-  Request = Struct.new(:params, :body, :headers)
+  RequestOptions = Struct.new(:timeout)
+  Request = Struct.new(:params, :body, :headers, :options)
   RawResponse = Struct.new(:status, :body)
 
   class ConnectionSubstitute
@@ -18,16 +19,30 @@ class Stedi::HTTP::SessionTest < Minitest::Test
     end
 
     def get(path)
-      request = Request.new(nil, nil, {})
+      request = Request.new(nil, nil, {}, RequestOptions.new)
       yield request if block_given?
-      @requests << { method: :get, path: path, params: request.params, body: request.body, headers: request.headers }
+      @requests << {
+        method: :get,
+        path: path,
+        params: request.params,
+        body: request.body,
+        headers: request.headers,
+        timeout: request.options.timeout
+      }
       next_response
     end
 
     def post(path)
-      request = Request.new(nil, nil, {})
+      request = Request.new(nil, nil, {}, RequestOptions.new)
       yield request if block_given?
-      @requests << { method: :post, path: path, params: request.params, body: request.body, headers: request.headers }
+      @requests << {
+        method: :post,
+        path: path,
+        params: request.params,
+        body: request.body,
+        headers: request.headers,
+        timeout: request.options.timeout
+      }
       next_response
     end
   end
@@ -89,6 +104,22 @@ class Stedi::HTTP::SessionTest < Minitest::Test
     assert_equal true, response.ok
     assert_equal "203.0.113.10, 198.51.100.7", connection.requests.last[:headers]["X-Forwarded-For"]
     assert_equal "gzip", connection.requests.last[:headers]["Accept-Encoding"]
+  end
+
+  def test_call_applies_request_timeout
+    connection = ConnectionSubstitute.new
+    connection.next_response = RawResponse.new(200, '{"ok":true}')
+
+    session = Stedi::HTTP::Session.build(
+      api_key: "token",
+      api_url: "https://api.example.com/v1",
+      connection: connection
+    )
+
+    response = session.(:get, "/polling/transactions", timeout: 120)
+
+    assert_equal true, response.ok
+    assert_equal 120, connection.requests.last[:timeout]
   end
 
   def test_call_logs_full_request_details
@@ -209,12 +240,13 @@ class Stedi::HTTP::SessionTest < Minitest::Test
     substitute = Stedi::HTTP::Session::Substitute.build
     substitute.response = Stedi::Response.new({ "ok" => true })
 
-    response = substitute.(:get, "/x", params: { a: 1 }, headers: { "X-Test" => "1" })
+    response = substitute.(:get, "/x", params: { a: 1 }, headers: { "X-Test" => "1" }, timeout: 120)
 
     assert_equal true, response.ok
     assert_equal :get, substitute.calls.last[:method]
     assert_equal "/x", substitute.calls.last[:path]
     assert_equal({ a: 1 }, substitute.calls.last[:params])
     assert_equal({ "X-Test" => "1" }, substitute.calls.last[:headers])
+    assert_equal 120, substitute.calls.last[:timeout]
   end
 end

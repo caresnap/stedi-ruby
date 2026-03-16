@@ -28,6 +28,7 @@ class Stedi::Healthcare::Eligibility::CheckTest < Minitest::Test
     assert_equal :post, @session.calls.last[:method]
     assert_equal "/change/medicalnetwork/eligibility/v3", @session.calls.last[:path]
     assert_equal params, @session.calls.last[:body]
+    assert_equal 120, @session.calls.last[:timeout]
   end
 
   def test_call_adds_x_forwarded_for_header
